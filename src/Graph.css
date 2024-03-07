@@ -1,0 +1,65 @@
+:root{
+    --node-size: 25px
+}
+.graph-container{
+    border: 1px solid;
+    margin: 5px;
+    height: 90vmin;
+    position: relative;
+}
+
+.node{
+    fill: red;
+    r: var(--node-size);
+}
+
+.node-move{
+    fill:blue;
+    r: var(--node-size)
+}
+
+.node-label{
+    font-size: 60px;
+    font-weight: bold;
+    transform: translateY(calc(var(--node-size) + 10px));
+    dominant-baseline: hanging;
+    text-anchor: middle;
+    cursor: default;
+}
+
+.node-selected{
+    stroke: green;
+    stroke-width: 10px;
+}
+
+.path{
+    stroke: black;
+    stroke-width: 20px;
+}
+
+.path:hover{
+    stroke: blue;
+}
+
+.hint{
+    position: absolute;
+    width: max-content;
+    height: min-content;
+    padding-top: 0px;
+    right: 5px;
+    bottom: 5px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    user-select: none;
+    -webkit-user-select: none;
+    /* border: 1px solid; */
+}
+
+.hint p{
+    margin-top: 0em;
+    margin-bottom: 0em;
+    color: gray;
+    text-align: right;
+    user-select: none;
+}

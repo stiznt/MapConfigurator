@@ -15,7 +15,7 @@ function generateNodeId(){
 
 function convertMousePosToSVGPos(mouseX: number, mouseY: number){
     const pt = new DOMPointReadOnly(mouseX, mouseY);
-    const mainSVG = document.getElementById('svg-main') as unknown as SVGSVGElement
+    const mainSVG = document.getElementById('svg-container') as unknown as SVGSVGElement
     const {x, y} = pt.matrixTransform(mainSVG.getScreenCTM()?.inverse())
     return [x, y] as const
 }

@@ -11,24 +11,36 @@ type GraphProps = {
 }
 
 function Graph({graphInfo, dispatcher}:GraphProps){
-    const [scale, setScale] = useState(1);
+    // const [scale, setScale] = useState(1);
     const [isMoveBG, setMoveBG] = useState(false)
     const [clickPosition, setClickPosition] = useState({x: 0, y: 0})
-    const [viewBoxOffset, setOffset] = useState({x: 0, y: 0})
+    const [offset, setOffset] = useState({x: 0, y: 0})
+    const [tempOffset, setTempOffset] = useState({x: 0, y: 0})
     const [focusRef, isFocused] = useFocus();
     const mousePosition = useMousePosition();
+    const [matrix, setMatrix] = useState(document.createElementNS("http://www.w3.org/2000/svg", "svg").createSVGMatrix());
     // const [bgImagePosition, startMove, stopMove] = useMove({x: 0, y: 0})
 
     const handleWheel = (event: React.WheelEvent) => {
         event.stopPropagation()
         console.log(event.deltaY)
-        if(event.deltaY > 0){
-            var new_scale = Math.min(2, scale+0.1);
-            setScale(new_scale)
-        }else{
-            var new_scale = Math.max(0.1, scale-0.1);
-            setScale(new_scale)
-        }
+        // if(event.deltaY > 0){
+        //     var new_scale = Math.min(2, scale+0.1);
+        //     setScale(new_scale)
+        // }else{
+        //     var new_scale = Math.max(0.1, scale-0.1);
+        //     setScale(new_scale)
+        // }
+        const scale = 1.0 + (-event.deltaY * 0.001);
+        const [x, y] = convertMousePosToSVGPos(event.clientX, event.clientY);
+        setMatrix((old_matrix) => {
+            const new_matrix = old_matrix.translate(x, y).scale(scale).translate(-x,-y);
+            var transform = document.createElementNS("http://www.w3.org/2000/svg", "svg").createSVGTransform();
+            transform.setMatrix(new_matrix);
+            var container = document.getElementById("svg-container") as unknown as SVGGElement;
+            container.transform.baseVal.initialize(transform);
+            return new_matrix;
+        });
     }
 
     const handleMouseDown = (event: React.MouseEvent) => {
@@ -56,7 +68,7 @@ function Graph({graphInfo, dispatcher}:GraphProps){
             const [x, y] = convertMousePosToSVGPos(event.clientX, event.clientY)
             const dx = clickPosition.x - x
             const dy = clickPosition.y - y
-            setOffset((offset) => {return {x: offset.x + dx, y: offset.y + dy}})
+            setOffset((offset) => {return {x: offset.x + dx, y: offset.y + dy}});
         }
 
         if(isMoveBG){
@@ -93,38 +105,41 @@ function Graph({graphInfo, dispatcher}:GraphProps){
                     V - создать вершину<br/>
                     Ctrl - создать путь <br/>
                     Alt - выделить вершину<br/>
-                    Shift - перемещение камеры
+                    Shift - перемещение камеры<br/>
+                    X:{graphInfo.nodes.length == 0?0:graphInfo.nodes[0].x} Y:{graphInfo.nodes.length == 0?0:graphInfo.nodes[0].y}
                 </p>
             </div>
-            <svg id="svg-main" viewBox={`${viewBoxOffset.x} ${viewBoxOffset.y} ${5000*scale} ${5000*scale}`} width="100%" height="90vmin" onMouseDown={handleMouseDown} onMouseUp={handleMouseUp} style={{userSelect: "none"}}>
-                <image id="bgImage" href="karta1.jpg" x={0} y={0} preserveAspectRatio="xMidYMid slice"/>
-                <g>
-                    {
-                        graphInfo.edges.map((v) => {
-                            const startNode = graphInfo.nodes.find((node) => node.id == v.firstNodeId)
-                            const finishNode = graphInfo.nodes.find((node) => node.id == v.secondNodeId)
-                            if(startNode == undefined || finishNode == undefined) return;
-                            return <Edge key={v.id} startPos={startNode} finishPos={finishNode} removePath={() => {dispatcher({type: "remove-path", args: {edgeId: v.id}})}}/>
-                        })
-                    }
-                </g>
-                <g>
-                    {graphInfo.nodes.map((v) => {
-                        return <Node 
-                                    key={v.id} 
-                                    nodeInfo={v}
-                                    selected={graphInfo.selectedNodeId == v.id} 
-                                    onMove={
-                                        (event: any) => {dispatcher({type: "node-move", args: {nodeId: v.id, event: event}})}
-                                    }
-                                    onSelect={
-                                        () => {dispatcher({type: "node-select", args: {nodeId: v.id}})}
-                                    }
-                                    onPathCreate={
-                                        () => {dispatcher({type: "create-path", args: {nodeId: v.id}})}
-                                    }
-                                    />
-                    })}
+            <svg id="svg-main" viewBox={`${offset.x} ${offset.y} 5000 5000`} width="100%" height="90vmin" onMouseDown={handleMouseDown} onMouseUp={handleMouseUp} style={{userSelect: "none"}}>
+                <g id="svg-container">
+                    <image id="bgImage" href="karta1.jpg" x={0} y={0} preserveAspectRatio="xMidYMid slice"/>
+                    <g>
+                        {
+                            graphInfo.edges.map((v) => {
+                                const startNode = graphInfo.nodes.find((node) => node.id == v.firstNodeId)
+                                const finishNode = graphInfo.nodes.find((node) => node.id == v.secondNodeId)
+                                if(startNode == undefined || finishNode == undefined) return;
+                                return <Edge key={v.id} startPos={startNode} finishPos={finishNode} removePath={() => {dispatcher({type: "remove-path", args: {edgeId: v.id}})}}/>
+                            })
+                        }
+                    </g>
+                    <g>
+                        {graphInfo.nodes.map((v) => {
+                            return <Node 
+                                        key={v.id} 
+                                        nodeInfo={v}
+                                        selected={graphInfo.selectedNodeId == v.id} 
+                                        onMove={
+                                            (event: any) => {dispatcher({type: "node-move", args: {nodeId: v.id, event: event}})}
+                                        }
+                                        onSelect={
+                                            () => {dispatcher({type: "node-select", args: {nodeId: v.id}})}
+                                        }
+                                        onPathCreate={
+                                            () => {dispatcher({type: "create-path", args: {nodeId: v.id}})}
+                                        }
+                                        />
+                        })}
+                    </g>
                 </g>
             </svg>
         </div>

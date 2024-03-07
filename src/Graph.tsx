@@ -23,7 +23,7 @@ function Graph({graphInfo, dispatcher}:GraphProps){
 
     const handleWheel = (event: React.WheelEvent) => {
         event.stopPropagation()
-        console.log(event.deltaY)
+        // console.log(event.deltaY)
         // if(event.deltaY > 0){
         //     var new_scale = Math.min(2, scale+0.1);
         //     setScale(new_scale)
@@ -44,9 +44,9 @@ function Graph({graphInfo, dispatcher}:GraphProps){
     }
 
     const handleMouseDown = (event: React.MouseEvent) => {
-        if(event.shiftKey){
+        if(event.shiftKey || event.button == 2){
             setMoveBG(true)
-            console.log(event.target)
+            // console.log(event.target)
             const target = event.target as HTMLElement;
             target.style.cursor = 'grab'
             const [x,y] = convertMousePosToSVGPos(event.clientX, event.clientY)
@@ -61,7 +61,16 @@ function Graph({graphInfo, dispatcher}:GraphProps){
         setClickPosition(null);
     }
 
-    
+    const handleRightMouse = (event: React.MouseEvent) => {
+        event.stopPropagation();
+        event.preventDefault();
+        // setMoveBG(true)
+        // // console.log(event.target)
+        // const target = event.target as HTMLElement;
+        // target.style.cursor = 'grab'
+        // const [x,y] = convertMousePosToSVGPos(event.clientX, event.clientY)
+        // setClickPosition({x: x, y: y})
+    }
 
     useEffect(() => {
 
@@ -77,7 +86,6 @@ function Graph({graphInfo, dispatcher}:GraphProps){
                 transform.setMatrix(new_matrix);
                 var container = document.getElementById("svg-container") as unknown as SVGGElement;
                 container.transform.baseVal.initialize(transform);
-
                 return new_matrix;
             })
         }
@@ -119,7 +127,7 @@ function Graph({graphInfo, dispatcher}:GraphProps){
                     Shift - перемещение камеры
                 </p>
             </div>
-            <svg id="svg-main" viewBox={`${offset.x} ${offset.y} 5000 5000`} width="100%" height="90vmin" onMouseDown={handleMouseDown} onMouseUp={handleMouseUp} style={{userSelect: "none"}}>
+            <svg id="svg-main" viewBox={`${offset.x} ${offset.y} 5000 5000`} width="100%" height="90vmin" onMouseDown={handleMouseDown} onMouseUp={handleMouseUp} style={{userSelect: "none"}} onContextMenu={handleRightMouse}>
                 <g id="svg-container">
                     <image id="bgImage" href="karta1.jpg" x={0} y={0} preserveAspectRatio="xMidYMid slice"/>
                     <g>

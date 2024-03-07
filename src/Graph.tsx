@@ -13,7 +13,7 @@ type GraphProps = {
 function Graph({graphInfo, dispatcher}:GraphProps){
     // const [scale, setScale] = useState(1);
     const [isMoveBG, setMoveBG] = useState(false)
-    const [clickPosition, setClickPosition] = useState({x: 0, y: 0})
+    const [clickPosition, setClickPosition] = useState<{x: number, y:number} | null>(null);
     const [offset, setOffset] = useState({x: 0, y: 0})
     const [tempOffset, setTempOffset] = useState({x: 0, y: 0})
     const [focusRef, isFocused] = useFocus();
@@ -58,6 +58,7 @@ function Graph({graphInfo, dispatcher}:GraphProps){
         setMoveBG(false)
         const target = event.target as HTMLElement;
         target.style.cursor = 'auto'
+        setClickPosition(null);
     }
 
     
@@ -66,9 +67,19 @@ function Graph({graphInfo, dispatcher}:GraphProps){
 
         function handleMove(event: MouseEvent){
             const [x, y] = convertMousePosToSVGPos(event.clientX, event.clientY)
-            const dx = clickPosition.x - x
-            const dy = clickPosition.y - y
-            setOffset((offset) => {return {x: offset.x + dx, y: offset.y + dy}});
+            if(clickPosition == null) return;
+            const dx = x - clickPosition.x
+            const dy = y - clickPosition.y
+            setMatrix((old_matrix) => {
+                var new_matrix = old_matrix.translate(dx, dy);
+                
+                var transform = document.createElementNS("http://www.w3.org/2000/svg", "svg").createSVGTransform();
+                transform.setMatrix(new_matrix);
+                var container = document.getElementById("svg-container") as unknown as SVGGElement;
+                container.transform.baseVal.initialize(transform);
+
+                return new_matrix;
+            })
         }
 
         if(isMoveBG){
@@ -105,8 +116,7 @@ function Graph({graphInfo, dispatcher}:GraphProps){
                     V - создать вершину<br/>
                     Ctrl - создать путь <br/>
                     Alt - выделить вершину<br/>
-                    Shift - перемещение камеры<br/>
-                    X:{graphInfo.nodes.length == 0?0:graphInfo.nodes[0].x} Y:{graphInfo.nodes.length == 0?0:graphInfo.nodes[0].y}
+                    Shift - перемещение камеры
                 </p>
             </div>
             <svg id="svg-main" viewBox={`${offset.x} ${offset.y} 5000 5000`} width="100%" height="90vmin" onMouseDown={handleMouseDown} onMouseUp={handleMouseUp} style={{userSelect: "none"}}>

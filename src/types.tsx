@@ -2,7 +2,9 @@ type NodeType = {
 	id: number,
 	label: string,
 	x: number,
-	y: number
+	y: number,
+	mac?: string
+	macEditable? :boolean;
 }
 
 type EdgeType = {
@@ -14,7 +16,8 @@ type EdgeType = {
 type GraphInfo = {
 	selectedNodeId: number,
 	nodes: NodeType[],
-	edges: EdgeType[]
+	edges: EdgeType[],
+	selectedNodeInfo? : NodeType
 }
 
 export type {NodeType, EdgeType, GraphInfo}

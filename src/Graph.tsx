@@ -142,12 +142,16 @@ function Graph({graphInfo, dispatcher}:GraphProps){
                     </g>
                     <g>
                         {graphInfo.nodes.map((v) => {
+                            if(v.id == -1) return;
                             return <Node 
                                         key={v.id} 
                                         nodeInfo={v}
                                         selected={graphInfo.selectedNodeId == v.id} 
                                         onMove={
-                                            (event: any) => {dispatcher({type: "node-move", args: {nodeId: v.id, event: event}})}
+                                            (event: any) => {
+                                                var [x, y] = convertMousePosToSVGPos(event.clientX, event.clientY)
+                                                dispatcher({type: "node-info-change", args: {nodeId: v.id, changes: [{key: "x", value: x}, {key: "y", value: y}]}})
+                                            }
                                         }
                                         onSelect={
                                             () => {dispatcher({type: "node-select", args: {nodeId: v.id}})}

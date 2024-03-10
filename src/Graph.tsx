@@ -133,10 +133,10 @@ function Graph({graphInfo, dispatcher}:GraphProps){
                     <g>
                         {
                             graphInfo.edges.map((v) => {
-                                const startNode = graphInfo.nodes.find((node) => node.id == v.firstNodeId)
-                                const finishNode = graphInfo.nodes.find((node) => node.id == v.secondNodeId)
-                                if(startNode == undefined || finishNode == undefined) return;
-                                return <Edge key={v.id} startPos={startNode} finishPos={finishNode} removePath={() => {dispatcher({type: "remove-path", args: {edgeId: v.id}})}}/>
+                                const nodes = graphInfo.nodes.filter(node => node.id in v.nodes);
+                                console.log(nodes)
+                                if(nodes.length < 2) return;
+                                return <Edge key={v.id} startPos={nodes[0]} finishPos={nodes[1]} removePath={() => {dispatcher({type: "remove-path", args: {edgeId: v.id}})}}/>
                             })
                         }
                     </g>

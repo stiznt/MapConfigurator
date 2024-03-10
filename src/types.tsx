@@ -4,13 +4,14 @@ type NodeType = {
 	x: number,
 	y: number,
 	mac?: string
-	macEditable? :boolean;
+	macEditable? :boolean
+	message?: string
 }
 
 type EdgeType = {
 	id: number,
-	firstNodeId: number,
-	secondNodeId: number
+	nodes: any
+	message?: string
 }
 
 type GraphInfo = {

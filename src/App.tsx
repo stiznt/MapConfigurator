@@ -73,7 +73,13 @@ function reducer(state: GraphInfo, action: {type:string, args: any}):GraphInfo{
 			return {
 				...state
 			};
-
+		case 'node-remove':
+			if(action.args.nodeId == -1) return state;
+			state.nodes = state.nodes.filter(node => node.id != action.args.nodeId);
+			state.selectedNodeId = -1;
+			return {
+				...state
+			};
 	}
 
 	return state;
@@ -112,7 +118,13 @@ function App() {
 			<CssBaseline/>
 			<AppBar position='sticky'>
 				<Toolbar>
-					<Button color="inherit">NEW</Button>
+					<Stack direction={'row'} spacing={1}>
+						<Button color="inherit">NEW</Button>
+						<Button color="inherit">DELETE</Button>
+						<Button color="inherit">UP</Button>
+						<Button color="inherit">DOWN</Button>
+						<Button color="inherit">PLAN</Button>
+					</Stack>
 				</Toolbar>
 			</AppBar>
 			<Grid container marginTop={"5px"}>

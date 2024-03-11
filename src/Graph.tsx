@@ -19,18 +19,9 @@ function Graph({graphInfo, dispatcher}:GraphProps){
     const [focusRef, isFocused] = useFocus();
     const mousePosition = useMousePosition();
     const [matrix, setMatrix] = useState(document.createElementNS("http://www.w3.org/2000/svg", "svg").createSVGMatrix());
-    // const [bgImagePosition, startMove, stopMove] = useMove({x: 0, y: 0})
 
     const handleWheel = (event: React.WheelEvent) => {
         event.stopPropagation()
-        // console.log(event.deltaY)
-        // if(event.deltaY > 0){
-        //     var new_scale = Math.min(2, scale+0.1);
-        //     setScale(new_scale)
-        // }else{
-        //     var new_scale = Math.max(0.1, scale-0.1);
-        //     setScale(new_scale)
-        // }
         const scale = 1.0 + (-event.deltaY * 0.001);
         const [x, y] = convertMousePosToSVGPos(event.clientX, event.clientY);
         setMatrix((old_matrix) => {
@@ -101,9 +92,12 @@ function Graph({graphInfo, dispatcher}:GraphProps){
 
     useEffect(() => {
         function handleKeydown(event: KeyboardEvent){
-            // console.log(event)
+            console.log(event)
             if(event.key == 'v'){
                 dispatcher({type: 'node-create', args: {mousePosition: mousePosition}})
+            }
+            if(event.key == 'z'){
+                dispatcher({type: 'node-remove', args: {nodeId: graphInfo.selectedNodeId}})
             }
         }
 
@@ -122,6 +116,7 @@ function Graph({graphInfo, dispatcher}:GraphProps){
             <div className="hint">
                 <p>
                     V - создать вершину<br/>
+                    Z - удалить вершину<br/>
                     Ctrl - создать путь <br/>
                     Alt - выделить вершину<br/>
                     Shift - перемещение камеры

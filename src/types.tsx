@@ -21,5 +21,4 @@ type GraphInfo = {
 	edges: EdgeType[],
 	selectedNodeInfo? : NodeType
 }
-
 export type {NodeType, EdgeType, GraphInfo}

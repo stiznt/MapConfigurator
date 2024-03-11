@@ -134,7 +134,6 @@ function Graph({graphInfo, dispatcher}:GraphProps){
                         {
                             graphInfo.edges.map((v) => {
                                 const nodes = graphInfo.nodes.filter(node => node.id in v.nodes);
-                                console.log(nodes)
                                 if(nodes.length < 2) return;
                                 return <Edge key={v.id} startPos={nodes[0]} finishPos={nodes[1]} removePath={() => {dispatcher({type: "remove-path", args: {edgeId: v.id}})}}/>
                             })

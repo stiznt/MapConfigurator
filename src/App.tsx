@@ -34,7 +34,6 @@ function reducer(state: GraphInfo, action: {type:string, args: any}):GraphInfo{
 				nodes: [...state.nodes, {id: id, x: x, y: y, label: `Точка ${id}`, mac: "", macEditable: false}]
 			};
 		case 'create-path':
-			console.log(action.args);
 			if(state.selectedNodeId == -1 || state.selectedNodeId == action.args.nodeId) return state;
 			
 			const paths = state.edges.filter((edge) => state.selectedNodeId in edge.nodes && action.args.nodeId in edge.nodes)
@@ -51,36 +50,6 @@ function reducer(state: GraphInfo, action: {type:string, args: any}):GraphInfo{
 				...state,
 				edges: new_edges
 			}
-		case "selected-node-label-changed":
-			console.log(state.selectedNodeId, state.selectedNodeInfo)
-			if(state.selectedNodeId != -1){
-				state.selectedNodeInfo!.label = (action.args.event.target as HTMLInputElement).value;
-				console.log(state.nodes.find(v => v.id == state.selectedNodeId));
-			}
-			console.log(state)
-			return state;
-
-		case "mac-editable-changed":
-			var node2 = state.nodes.find((v) => v.id == state.selectedNodeId)
-			var new_nodes2 = state.nodes.filter(node => node.id == state.selectedNodeId);
-
-			node2!.macEditable = (action.args.event.target as HTMLInputElement).checked;
-			new_nodes2.push(node2!);
-			return {
-				...state,
-				nodes: [...new_nodes2]
-			};
-
-		case "mac-changed":
-			var node3 = state.nodes.find((v) => v.id == state.selectedNodeId)
-			var new_nodes3 = state.nodes.filter(node => node.id == state.selectedNodeId);
-
-			node3!.mac = (action.args.evevnt.target as HTMLInputElement).value;
-			new_nodes3.push(node3!);
-			return {
-				...state,
-				nodes: [...new_nodes3]
-			};
 		case 'node-info-change':
 			var changes :{key:keyof NodeType, value: any}[] = action.args.changes;
 			let node4 = state.nodes.find(v => v.id == action.args.nodeId)!;
@@ -112,7 +81,13 @@ function App() {
 	}
 
 	const getConnectedNodesById = (id: number) => {
-		// var nodes = graphInfo.edges.filter();
+		var edges = graphInfo.edges.filter(edge => id in edge.nodes);
+		var ids = {[graphInfo.selectedNodeId]: 1};
+		edges.forEach(elem => {ids = Object.assign(ids, elem.nodes)})
+		
+		delete ids[graphInfo.selectedNodeId];
+
+		return graphInfo.nodes.filter(node => node.id in ids);
 	}
 
 	return (
@@ -149,6 +124,11 @@ function App() {
                                 <InputLabel id='link-select-label'>Смежная точка</InputLabel>
                                 <Select labelId='link-select-label' label="Смежная точка">
                                     <MenuItem value={-1}>None</MenuItem>
+									{
+										getConnectedNodesById(graphInfo.selectedNodeId).map(node => {
+											return <MenuItem value={node.id}>{node.label}</MenuItem>
+										})
+									}
                                 </Select>
                             </FormControl>
 						</ListItem>

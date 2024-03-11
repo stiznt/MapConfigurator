@@ -6,6 +6,7 @@ type NodeType = {
 	mac?: string
 	macEditable? :boolean
 	message?: string
+	isEndPoint?: boolean
 }
 
 type EdgeType = {

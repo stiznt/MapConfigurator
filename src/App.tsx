@@ -3,7 +3,7 @@ import './App.css';
 import Graph from './Graph';
 import { convertMousePosToSVGPos, generateEdgeId, generateNodeId } from './utils';
 import { GraphInfo, NodeType, EdgeType } from './types';
-import { AppBar, Box, Button,Checkbox,CssBaseline,FormControl,Grid,InputLabel,List, ListItem,MenuItem,Select,Stack,TextField, Toolbar} from '@mui/material';
+import { AppBar, Box, Button,Checkbox,CssBaseline,FormControl,FormControlLabel,FormGroup,Grid,InputLabel,List, ListItem,MenuItem,Select,Stack,TextField, Toolbar} from '@mui/material';
 
 function reducer(state: GraphInfo, action: {type:string, args: any}):GraphInfo{
 	function updateKey<K extends keyof NodeType>(key: K, value: NodeType[K]){
@@ -31,7 +31,7 @@ function reducer(state: GraphInfo, action: {type:string, args: any}):GraphInfo{
 			var id = generateNodeId()
 			return {
 				...state,
-				nodes: [...state.nodes, {id: id, x: x, y: y, label: `Точка ${id}`, mac: "", macEditable: false, message: ""}]
+				nodes: [...state.nodes, {id: id, x: x, y: y, label: `Точка ${id}`, mac: "", macEditable: false, message: "", isEndPoint: false}]
 			};
 		case 'create-path':
 			if(state.selectedNodeId == -1 || state.selectedNodeId == action.args.nodeId) return state;
@@ -80,7 +80,7 @@ function reducer(state: GraphInfo, action: {type:string, args: any}):GraphInfo{
 }
 
 function App() {
-	const [graphInfo, dispatch] = useReducer(reducer, {selectedNodeId: -1, nodes: [{x: 0, y: 0, label: "", id:-1, mac:"", message: " "}], edges: []})
+	const [graphInfo, dispatch] = useReducer(reducer, {selectedNodeId: -1, nodes: [{x: 0, y: 0, label: "", id:-1, mac:"", message: " ", isEndPoint: false}], edges: []})
 	const [selectorValue, setSelectorValue] = useState(-1);
 
 	const getSelectedNode = () => {
@@ -152,6 +152,18 @@ function App() {
 						<ListItem alignItems='center' disablePadding>
 							<TextField label="Link event" margin='dense' fullWidth value={getEdgeById(selectorValue)?.message} onChange={event => dispatch({type: "edge-update", args: {nodeId: selectorValue, changes: [{key: 'message', value: event.target.value}]}})}></TextField>
 						</ListItem> 
+						<ListItem alignItems='center' disablePadding>
+							<FormGroup row>
+								<FormControlLabel control={<Checkbox value={getSelectedNode()?.isEndPoint} onChange={e => selectedNodeChange([{key: "isEndPoint", value: e.target.checked}])}/>} label={"Конечная точка"}/>
+								{/* <FormControlLabel control={<Checkbox defaultChecked/>} label={"Route spelling"}/> */}
+							</FormGroup>
+						</ListItem>
+						<ListItem alignItems='center' disablePadding>
+							<Button fullWidth variant='contained'>экспортировать</Button>
+						</ListItem>
+						<ListItem alignItems='center' disableGutters>
+							<Button fullWidth variant='contained'>импортировать</Button>
+						</ListItem>
 
 		 			</List>
 				</Grid>

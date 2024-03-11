@@ -31,7 +31,7 @@ function reducer(state: GraphInfo, action: {type:string, args: any}):GraphInfo{
 			var id = generateNodeId()
 			return {
 				...state,
-				nodes: [...state.nodes, {id: id, x: x, y: y, label: `Точка ${id}`, mac: "", macEditable: false}]
+				nodes: [...state.nodes, {id: id, x: x, y: y, label: `Точка ${id}`, mac: "", macEditable: false, message: ""}]
 			};
 		case 'create-path':
 			if(state.selectedNodeId == -1 || state.selectedNodeId == action.args.nodeId) return state;
@@ -42,7 +42,7 @@ function reducer(state: GraphInfo, action: {type:string, args: any}):GraphInfo{
 			}
 			return {
 				...state,
-				edges: [...state.edges, {id: generateEdgeId(), nodes: {[state.selectedNodeId]: 1, [action.args.nodeId]: 1}}]
+				edges: [...state.edges, {id: generateEdgeId(), nodes: {[state.selectedNodeId]: 1, [action.args.nodeId]: 1}, message: ""}]
 			};
 		case 'remove-path':
 			const new_edges = state.edges.filter((edge) => edge.id !== action.args.edgeId)
@@ -50,6 +50,16 @@ function reducer(state: GraphInfo, action: {type:string, args: any}):GraphInfo{
 				...state,
 				edges: new_edges
 			}
+		case 'edge-update':
+			let edge = state.edges.find(e => action.args.nodeId in e.nodes && state.selectedNodeId in e.nodes)
+			console.log(action, edge)
+			if(edge == undefined) return state;
+			
+			edge.message = action.args.changes[0].value
+			console.log(edge)
+			return {
+				...state
+			};
 		case 'node-info-change':
 			var changes :{key:keyof NodeType, value: any}[] = action.args.changes;
 			let node4 = state.nodes.find(v => v.id == action.args.nodeId)!;
@@ -70,7 +80,8 @@ function reducer(state: GraphInfo, action: {type:string, args: any}):GraphInfo{
 }
 
 function App() {
-	const [graphInfo, dispatch] = useReducer(reducer, {selectedNodeId: -1, nodes: [{x: 0, y: 0, label: "", id:-1, mac:"", message: ""}], edges: []})
+	const [graphInfo, dispatch] = useReducer(reducer, {selectedNodeId: -1, nodes: [{x: 0, y: 0, label: "", id:-1, mac:"", message: " "}], edges: []})
+	const [selectorValue, setSelectorValue] = useState(-1);
 
 	const getSelectedNode = () => {
 		return graphInfo.nodes.find(v => v.id === graphInfo.selectedNodeId)
@@ -88,6 +99,12 @@ function App() {
 		delete ids[graphInfo.selectedNodeId];
 
 		return graphInfo.nodes.filter(node => node.id in ids);
+	}
+
+	const getEdgeById = (id: number) => {
+		let edge = graphInfo.edges.find(e => id in e.nodes && graphInfo.selectedNodeId in e.nodes)
+		if(edge == undefined) return ({id: -1, nodes: [], message: ""} as EdgeType)
+		return edge;
 	}
 
 	return (
@@ -117,12 +134,12 @@ function App() {
 							<TextField fullWidth label="Координата Y" value={getSelectedNode()?.y} onChange={event => selectedNodeChange([{key: "y", value: event.target.value}])} margin='dense'></TextField>
 						</ListItem>
 						<ListItem alignItems='center' disablePadding>
-							<TextField fullWidth label="Аудио-сообщение" value={getSelectedNode()?.message} onChange={event => selectedNodeChange([{key: "message", value: event.target.value}])}margin='dense'></TextField>
+							<TextField fullWidth label="Аудио-сообщение" value={getSelectedNode()!.message} onChange={event => selectedNodeChange([{key: "message", value: event.target.value}])} margin='dense'></TextField>
 						</ListItem>
 						<ListItem alignItems='center' disablePadding>
 							<FormControl margin='dense' fullWidth>
                                 <InputLabel id='link-select-label'>Смежная точка</InputLabel>
-                                <Select labelId='link-select-label' label="Смежная точка">
+                                <Select labelId='link-select-label' label="Смежная точка" value={selectorValue} onChange={e => setSelectorValue(e.target.value as number)}>
                                     <MenuItem value={-1}>None</MenuItem>
 									{
 										getConnectedNodesById(graphInfo.selectedNodeId).map(node => {
@@ -133,8 +150,8 @@ function App() {
                             </FormControl>
 						</ListItem>
 						<ListItem alignItems='center' disablePadding>
-							<TextField label="Link event" margin='dense' fullWidth></TextField>
-						</ListItem>
+							<TextField label="Link event" margin='dense' fullWidth value={getEdgeById(selectorValue)?.message} onChange={event => dispatch({type: "edge-update", args: {nodeId: selectorValue, changes: [{key: 'message', value: event.target.value}]}})}></TextField>
+						</ListItem> 
 
 		 			</List>
 				</Grid>

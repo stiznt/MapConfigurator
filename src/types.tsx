@@ -20,5 +20,6 @@ type GraphInfo = {
 	nodes: NodeType[],
 	edges: EdgeType[],
 	selectedNodeInfo? : NodeType
+	planURL: string
 }
 export type {NodeType, EdgeType, GraphInfo}

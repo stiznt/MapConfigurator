@@ -124,7 +124,7 @@ function Graph({graphInfo, dispatcher}:GraphProps){
             </div>
             <svg id="svg-main" viewBox={`${offset.x} ${offset.y} 5000 5000`} width="100%" height="90vmin" onMouseDown={handleMouseDown} onMouseUp={handleMouseUp} style={{userSelect: "none"}} onContextMenu={handleRightMouse}>
                 <g id="svg-container">
-                    <image id="bgImage" href="karta1.jpg" x={0} y={0} preserveAspectRatio="xMidYMid slice"/>
+                    <image id="bgImage" xlinkHref={graphInfo.planURL} x={0} y={0} preserveAspectRatio="xMidYMid slice"/>
                     <g>
                         {
                             graphInfo.edges.map((v) => {

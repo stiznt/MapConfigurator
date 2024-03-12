@@ -3,7 +3,8 @@ import './App.css';
 import Graph from './Graph';
 import { convertMousePosToSVGPos, generateEdgeId, generateNodeId } from './utils';
 import { GraphInfo, NodeType, EdgeType } from './types';
-import { AppBar, Box, Button,Checkbox,CssBaseline,FormControl,FormControlLabel,FormGroup,Grid,InputLabel,List, ListItem,MenuItem,Select,Stack,TextField, Toolbar} from '@mui/material';
+import { AppBar, Box, Button,Checkbox,CssBaseline,Dialog,DialogTitle,FormControl,FormControlLabel,FormGroup,Grid,InputLabel,List, ListItem,MenuItem,Select,Stack,TextField, Toolbar} from '@mui/material';
+import PlanLoadDialog from './PlanLoadDialog';
 
 function reducer(state: GraphInfo, action: {type:string, args: any}):GraphInfo{
 	function updateKey<K extends keyof NodeType>(key: K, value: NodeType[K]){
@@ -80,14 +81,20 @@ function reducer(state: GraphInfo, action: {type:string, args: any}):GraphInfo{
 			return {
 				...state
 			};
+		case 'set-plan':
+			return{
+				...state,
+				planURL: action.args.url
+			}
 	}
 
 	return state;
 }
 
 function App() {
-	const [graphInfo, dispatch] = useReducer(reducer, {selectedNodeId: -1, nodes: [{x: 0, y: 0, label: "", id:-1, mac:"", message: " ", isEndPoint: false}], edges: []})
+	const [graphInfo, dispatch] = useReducer(reducer, {selectedNodeId: -1, nodes: [{x: 0, y: 0, label: "", id:-1, mac:"", message: " ", isEndPoint: false}], edges: [], planURL: ""})
 	const [selectorValue, setSelectorValue] = useState(-1);
+	const [planLoadDialog, setPlanLoadDialogOpen] = useState(false);
 
 	const getSelectedNode = () => {
 		return graphInfo.nodes.find(v => v.id === graphInfo.selectedNodeId)
@@ -113,8 +120,15 @@ function App() {
 		return edge;
 	}
 
+	const handlePlanDialogClose = (url: string) => {
+		console.log(url)
+		setPlanLoadDialogOpen(false);
+		dispatch({type:'set-plan', args: {url: url}});
+	}
+
 	return (
 		<Stack>
+			<PlanLoadDialog open={planLoadDialog} onClose={handlePlanDialogClose}/>
 			<CssBaseline/>
 			<AppBar position='sticky'>
 				<Toolbar>
@@ -123,7 +137,7 @@ function App() {
 						<Button color="inherit">DELETE</Button>
 						<Button color="inherit">UP</Button>
 						<Button color="inherit">DOWN</Button>
-						<Button color="inherit">PLAN</Button>
+						<Button color="inherit" onClick={e => setPlanLoadDialogOpen(true)}>PLAN</Button>
 					</Stack>
 				</Toolbar>
 			</AppBar>
@@ -181,35 +195,7 @@ function App() {
 				</Grid>
 			</Grid>
 		</Stack>
-		// <Box>
-		// 	<CssBaseline/>
-		// 	<AppBar position='sticky'>
-		// 		<Toolbar>
-		// 			<Button color={"inherit"}>NEW</Button>
-		// 		</Toolbar>
-		// 	</AppBar>
-			
-		// 	<Grid container>
-		// 		<Grid xs={9}>
-		// 			<Graph graphInfo={graphInfo} dispatcher={dispatch}/>
-		// 		</Grid>
-		// 		<Grid item xs>
-		// 			<TextField fullWidth label="Выбранная вершина" value={graphInfo.selectedNodeInfo?.label} onChange={event => dispatch({type: 'selected-node-label-changed', args: {event: event}})}></TextField>
-		// 			<TextField fullWidth label="ID" InputProps={{readOnly: true}} value={""} margin='dense'></TextField>
-
-		// 			<List>
-		// 				<ListItem alignItems="center" disablePadding>
-		// 					<TextField fullWidth disabled={false} label="MAC" value={""} onInput={event => dispatch({type: 'mac-changed', args: {event: event}})}/>
-		// 					<Checkbox checked={false} onChange={event => dispatch({type: 'mac-editable-changed', args: {event: event}})}/>
-		// 				</ListItem>
-
-		// 			</List>
-				
-		// 		</Grid>
-		// 	</Grid>
-
-		// </Box>
 	);
 }
-{/* <Graph graphInfo={graphInfo} dispatcher={dispatch}/> */}
+
 export default App;

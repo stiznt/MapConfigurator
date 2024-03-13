@@ -100,7 +100,7 @@ function reducer(state: GraphInfo, action: {type:string, args: any}):GraphInfo{
 		case 'floor-remove':
 			if(state.floors.length == 1) return state;
 			state.floors.splice(state.currentFloor, 1);
-			state.currentFloor -= 1;
+			state.currentFloor -= state.currentFloor - 1 < 0? 0:state.currentFloor-1;
 			return {
 				...state
 			}
@@ -177,14 +177,14 @@ function App() {
 			<AppBar position='sticky'>
 				<Toolbar>
 					<Stack direction={'row'} spacing={3}>
-						<Button color="inherit" onClick={() => dispatch({type: 'floor-create', args: {}})}>NEW</Button>
-						<Button color="inherit" onClick={() => dispatch({type: 'floor-remove', args: {}})}>DELETE</Button>
+						<Button color="inherit" onClick={() => dispatch({type: 'floor-create', args: {}})}>Новый этаж</Button>
+						<Button color="inherit" onClick={() => dispatch({type: 'floor-remove', args: {}})}>Удалить этаж</Button>
 						<ButtonGroup variant='text'>
 							<IconButton color="inherit" onClick={() => dispatch({type: 'set-current-floor', args: {value: graphInfo.currentFloor + 1 >= graphInfo.floors.length? graphInfo.floors.length-1: graphInfo.currentFloor+1}})}><UpIcon/></IconButton>
 							<Typography  variant="h5" textAlign={"center"} width={"100%"}>{graphInfo.currentFloor + 1}</Typography>
 							<IconButton color="inherit" onClick={() => dispatch({type: 'set-current-floor', args: {value: graphInfo.currentFloor - 1 < 0? 0: graphInfo.currentFloor-1}})}><DownIcon/></IconButton>
 						</ButtonGroup>
-						<Button color="inherit" onClick={e => setPlanLoadDialogOpen(true)}>PLAN</Button>
+						<Button color="inherit" onClick={e => setPlanLoadDialogOpen(true)}>Загрузить план этажа</Button>
 					</Stack>
 				</Toolbar>
 			</AppBar>

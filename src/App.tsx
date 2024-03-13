@@ -3,7 +3,7 @@ import './App.css';
 import Graph from './Graph';
 import { convertMousePosToSVGPos, generateEdgeId, generateNodeId } from './utils';
 import { GraphInfo, NodeType, EdgeType, FloorInfo } from './types';
-import { AppBar, Box, Button,Checkbox,CssBaseline,Dialog,DialogTitle,FormControl,FormControlLabel,FormGroup,Grid,IconButton,InputLabel,List, ListItem,MenuItem,Select,Stack,TextField, Toolbar, Typography, createSvgIcon} from '@mui/material';
+import { AppBar, Box, Button,ButtonGroup,Checkbox,CssBaseline,Dialog,DialogTitle,FormControl,FormControlLabel,FormGroup,Grid,IconButton,InputLabel,List, ListItem,MenuItem,Select,Stack,TextField, Toolbar, Typography, createSvgIcon} from '@mui/material';
 import PlanLoadDialog from './PlanLoadDialog';
 
 function reducer(state: GraphInfo, action: {type:string, args: any}):GraphInfo{
@@ -179,9 +179,11 @@ function App() {
 					<Stack direction={'row'} spacing={3}>
 						<Button color="inherit" onClick={() => dispatch({type: 'floor-create', args: {}})}>NEW</Button>
 						<Button color="inherit" onClick={() => dispatch({type: 'floor-remove', args: {}})}>DELETE</Button>
-						<Button color="inherit" onClick={() => dispatch({type: 'set-current-floor', args: {value: graphInfo.currentFloor + 1 >= graphInfo.floors.length? graphInfo.floors.length-1: graphInfo.currentFloor+1}})}>UP</Button>
-						<Typography  variant="h5" textAlign={"center"} width={"100%"}>{graphInfo.currentFloor + 1}</Typography>
-						<Button color="inherit" onClick={() => dispatch({type: 'set-current-floor', args: {value: graphInfo.currentFloor - 1 < 0? 0: graphInfo.currentFloor-1}})}>DOWN</Button>
+						<ButtonGroup variant='text'>
+							<IconButton color="inherit" onClick={() => dispatch({type: 'set-current-floor', args: {value: graphInfo.currentFloor + 1 >= graphInfo.floors.length? graphInfo.floors.length-1: graphInfo.currentFloor+1}})}><UpIcon/></IconButton>
+							<Typography  variant="h5" textAlign={"center"} width={"100%"}>{graphInfo.currentFloor + 1}</Typography>
+							<IconButton color="inherit" onClick={() => dispatch({type: 'set-current-floor', args: {value: graphInfo.currentFloor - 1 < 0? 0: graphInfo.currentFloor-1}})}><DownIcon/></IconButton>
+						</ButtonGroup>
 						<Button color="inherit" onClick={e => setPlanLoadDialogOpen(true)}>PLAN</Button>
 					</Stack>
 				</Toolbar>
@@ -244,11 +246,11 @@ function App() {
 }
 
 const UpIcon = createSvgIcon(<svg width="800px" height="800px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path fill-rule="evenodd" clip-rule="evenodd" d="M12 7C12.2652 7 12.5196 7.10536 12.7071 7.29289L19.7071 14.2929C20.0976 14.6834 20.0976 15.3166 19.7071 15.7071C19.3166 16.0976 18.6834 16.0976 18.2929 15.7071L12 9.41421L5.70711 15.7071C5.31658 16.0976 4.68342 16.0976 4.29289 15.7071C3.90237 15.3166 3.90237 14.6834 4.29289 14.2929L11.2929 7.29289C11.4804 7.10536 11.7348 7 12 7Z" fill="#000000"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M12 7C12.2652 7 12.5196 7.10536 12.7071 7.29289L19.7071 14.2929C20.0976 14.6834 20.0976 15.3166 19.7071 15.7071C19.3166 16.0976 18.6834 16.0976 18.2929 15.7071L12 9.41421L5.70711 15.7071C5.31658 16.0976 4.68342 16.0976 4.29289 15.7071C3.90237 15.3166 3.90237 14.6834 4.29289 14.2929L11.2929 7.29289C11.4804 7.10536 11.7348 7 12 7Z" fill="white"/>
 </svg>, "UP")
 
 const DownIcon = createSvgIcon(<svg width="800px" height="800px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path fill-rule="evenodd" clip-rule="evenodd" d="M4.29289 8.29289C4.68342 7.90237 5.31658 7.90237 5.70711 8.29289L12 14.5858L18.2929 8.29289C18.6834 7.90237 19.3166 7.90237 19.7071 8.29289C20.0976 8.68342 20.0976 9.31658 19.7071 9.70711L12.7071 16.7071C12.3166 17.0976 11.6834 17.0976 11.2929 16.7071L4.29289 9.70711C3.90237 9.31658 3.90237 8.68342 4.29289 8.29289Z" fill="#000000"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M4.29289 8.29289C4.68342 7.90237 5.31658 7.90237 5.70711 8.29289L12 14.5858L18.2929 8.29289C18.6834 7.90237 19.3166 7.90237 19.7071 8.29289C20.0976 8.68342 20.0976 9.31658 19.7071 9.70711L12.7071 16.7071C12.3166 17.0976 11.6834 17.0976 11.2929 16.7071L4.29289 9.70711C3.90237 9.31658 3.90237 8.68342 4.29289 8.29289Z" fill="white"/>
 </svg>, "DOWN")
 
 export default App;

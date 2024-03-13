@@ -16,10 +16,15 @@ type EdgeType = {
 }
 
 type GraphInfo = {
+	floors: FloorInfo[]
+	currentFloor: number
+}
+
+type FloorInfo = {
 	selectedNodeId: number,
 	nodes: NodeType[],
 	edges: EdgeType[],
 	selectedNodeInfo? : NodeType
 	planURL: string
 }
-export type {NodeType, EdgeType, GraphInfo}
+export type {NodeType, EdgeType, GraphInfo, FloorInfo}

@@ -15,7 +15,7 @@ function PlanLoadDialog(props: PlanLoadDialogProps){
     }
 
 	return (
-		<Dialog open={props.open} onClose={props.onClose}>
+		<Dialog open={props.open} onClose={() => {props.onClose(fileURL)}}>
 			<DialogTitle>Загрузка плана этажа</DialogTitle>
 			<List>
 				<ListItem alignItems='center'>
@@ -30,8 +30,8 @@ function PlanLoadDialog(props: PlanLoadDialogProps){
 				</ListItem>
 				<ListItem alignItems='center'>
 					<Stack spacing={1} direction={"row"} width={"100%"}>
-						<Button variant='contained' fullWidth onClick={(event) => props.onClose(fileURL) }>Загрузить</Button>
-						<Button variant='contained' fullWidth>Отмена</Button>
+						<Button variant='contained' fullWidth onClick={(event) => props.onClose(fileURL)}>Загрузить</Button>
+						<Button variant='contained' fullWidth onClick={(event) => props.onClose(fileURL)}>Отмена</Button>
 					</Stack>
 				</ListItem>
 			</List>

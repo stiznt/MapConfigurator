@@ -1,10 +1,10 @@
 import React, {useEffect, useReducer, useRef, useState} from "react";
 import './Graph.css'
-import { GraphInfo } from "./types";
+import { FloorInfo } from "./types";
 import { convertMousePosToSVGPos, useFocus, useMousePosition, useSize } from "./utils";
 
 type GraphProps = {
-    graphInfo: GraphInfo,
+    graphInfo: FloorInfo,
     dispatcher: any
     width? :number
     height? :number
@@ -130,7 +130,7 @@ function Graph({graphInfo, dispatcher}:GraphProps){
                             graphInfo.edges.map((v) => {
                                 const nodes = graphInfo.nodes.filter(node => node.id in v.nodes);
                                 if(nodes.length < 2) return;
-                                return <Edge key={v.id} startPos={nodes[0]} finishPos={nodes[1]} removePath={() => {dispatcher({type: "remove-path", args: {edgeId: v.id}})}}/>
+                                return <Edge key={v.id} startPos={nodes[0]} finishPos={nodes[1]} removePath={() => {dispatcher({type: "edge-remove", args: {edgeId: v.id}})}}/>
                             })
                         }
                     </g>
@@ -144,14 +144,14 @@ function Graph({graphInfo, dispatcher}:GraphProps){
                                         onMove={
                                             (event: any) => {
                                                 var [x, y] = convertMousePosToSVGPos(event.clientX, event.clientY)
-                                                dispatcher({type: "node-info-change", args: {nodeId: v.id, changes: [{key: "x", value: x}, {key: "y", value: y}]}})
+                                                dispatcher({type: "node-change", args: {nodeId: v.id, changes: [{key: "x", value: x}, {key: "y", value: y}]}})
                                             }
                                         }
                                         onSelect={
-                                            () => {dispatcher({type: "node-select", args: {nodeId: v.id}})}
+                                            () => {console.log(graphInfo);dispatcher({type: "node-select", args: {nodeId: v.id}})}
                                         }
                                         onPathCreate={
-                                            () => {dispatcher({type: "create-path", args: {nodeId: v.id}})}
+                                            () => {dispatcher({type: "edge-create", args: {nodeId: v.id}})}
                                         }
                                         />
                         })}

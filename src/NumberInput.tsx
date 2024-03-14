@@ -1,5 +1,5 @@
 import { Box, TextField } from "@mui/material";
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 
 function NumberInput({value, onChange, ...props}: any){
     const [inputValue, setInputValue] = useState(value ? value.toString(): "")
@@ -10,10 +10,13 @@ function NumberInput({value, onChange, ...props}: any){
         if(/^-?\d+$/.test(new_value)){
             setValidateValue(parseInt(new_value))
             if(onChange) onChange(parseInt(new_value));
-            console.log(new_value)
         }
         setInputValue(new_value);
     }
+
+    useEffect(() => {
+        setInputValue(value);
+    }, [value])
 
     return (
         <Box>

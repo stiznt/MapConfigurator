@@ -92,13 +92,11 @@ function reducer(state: GraphInfo, action: {type:string, args: any}):GraphInfo{
 			var temp = state.floors.findIndex(floor => floor.id === state.currentFloorId);
 			if(temp == 0) break;
 			state.currentFloorId = state.floors[temp-1].id;
-			console.log(state.floors)
 			break;
 		case 'current-floor-id-increase':
 			var temp = state.floors.findIndex(floor => floor.id === state.currentFloorId);
 			if(temp == state.floors.length-1) break;
 			state.currentFloorId = state.floors[temp+1].id;
-			console.log(state.floors)
 
 			break;
 		case 'floor-id-change':

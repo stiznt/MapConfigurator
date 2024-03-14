@@ -6,10 +6,15 @@ import { GraphInfo, NodeType, EdgeType, FloorInfo } from './types';
 import { AppBar, Box, Button,ButtonGroup,Checkbox,CssBaseline,Dialog,DialogTitle,FormControl,FormControlLabel,FormGroup,Grid,IconButton,InputLabel,List, ListItem,MenuItem,Paper,Select,Stack,TextField, Toolbar, Typography, createSvgIcon} from '@mui/material';
 import PlanLoadDialog from './PlanLoadDialog';
 import NumberInput from './NumberInput';
-import JSZip from 'jszip';
+import JSZip, { file } from 'jszip';
 import {saveAs} from 'file-saver'
+import { callbackify } from 'util';
 
 function reducer(state: GraphInfo, action: {type:string, args: any}):GraphInfo{
+	function setState(value: any){
+		state = Object.assign({}, value);
+		console.log("setstate")
+	}
 	let currentFloor = state.floors.find(floor => floor.id == state.currentFloorId);
 	if(!currentFloor) return state;
 	switch(action.type){
@@ -110,6 +115,9 @@ function reducer(state: GraphInfo, action: {type:string, args: any}):GraphInfo{
 		case 'graph-export':
 			graphExport(state);
 			break;
+		case 'state-change':
+			console.log(action.args.state);
+			return {...action.args.state}
 	}
 	return {
 		...state
@@ -190,6 +198,29 @@ async function graphExport(graphInfo: GraphInfo){
 	// a.click();
 }
 
+function graphImport(file:any, callback: (value: any) => void){
+	console.log("import enter")
+	const zip = JSZip();
+	zip.loadAsync(file).then(zip => {
+		zip.files['graph.json'].async('string').then(async data => {
+			console.log("data loaded")
+			var floors:FloorInfo[] = [];
+			var json = JSON.parse(data);
+			for(var i = 0; i < json.length; i++){
+				floors.push(Object.assign({selectedNodeId: -1}, json[i]))
+				var new_url =  URL.createObjectURL(await zip.files[floors[i].planURL].async('blob').then(image => image));
+				floors[i].planURL = new_url;
+			}
+			var new_graphInfo: GraphInfo = {
+				floors: floors,
+				currentFloorId: floors[0].id
+			}
+			console.log(new_graphInfo)
+			callback(new_graphInfo);
+		})
+	})
+}
+
 function App() {
 	const [graphInfo, dispatch] = useReducer(reducer, initGraphInfo());
 	const [selectorValue, setSelectorValue] = useState(-1);
@@ -227,6 +258,15 @@ function App() {
 		console.log(url)
 		setPlanLoadDialogOpen(false);
 		dispatch({type:'set-plan', args: {url: url}});
+	}
+
+	const handleImportGraph = (event:any) => {
+		const fileInput = document.createElement("input")
+		fileInput.style.display = "none";
+		fileInput.type = 'file';
+		// fileInput.accept="zip"
+		fileInput.onchange = (event : any) => {if(event.target.files && event.target.files[0]) graphImport(event.target.files[0], (value) => dispatch({type: 'state-change', args: {state: value}}));}
+		fileInput.click();
 	}
 
 	return (
@@ -313,7 +353,7 @@ function App() {
 							<Button fullWidth variant='contained' onClick={() => dispatch({type: "graph-export", args: {}})}>экспортировать</Button>
 						</ListItem>
 						<ListItem alignItems='center' disableGutters>
-							<Button fullWidth variant='contained'>импортировать</Button>
+							<Button fullWidth variant='contained' onClick={handleImportGraph}>импортировать</Button>
 						</ListItem>
 
 		 			</List>

@@ -3,9 +3,10 @@ import './App.css';
 import Graph from './Graph';
 import { convertMousePosToSVGPos, generateEdgeId, generateNodeId } from './utils';
 import { GraphInfo, NodeType, EdgeType, FloorInfo } from './types';
-import { AppBar, Box, Button,ButtonGroup,Checkbox,CssBaseline,Dialog,DialogTitle,FormControl,FormControlLabel,FormGroup,Grid,IconButton,InputLabel,List, ListItem,MenuItem,Select,Stack,TextField, Toolbar, Typography, createSvgIcon} from '@mui/material';
+import { AppBar, Box, Button,ButtonGroup,Checkbox,CssBaseline,Dialog,DialogTitle,FormControl,FormControlLabel,FormGroup,Grid,IconButton,InputLabel,List, ListItem,MenuItem,Paper,Select,Stack,TextField, Toolbar, Typography, createSvgIcon} from '@mui/material';
 import PlanLoadDialog from './PlanLoadDialog';
 import NumberInput from './NumberInput';
+import { maxHeaderSize } from 'http';
 
 function reducer(state: GraphInfo, action: {type:string, args: any}):GraphInfo{
 	let currentFloor = state.floors.find(floor => floor.id == state.currentFloorId);
@@ -199,11 +200,16 @@ function App() {
 				<Grid item xs={9}>
 					<Graph graphInfo={getCurrentFloor()} dispatcher={dispatch}/>
 				</Grid>
-				<Grid item xs margin="5px" marginRight={"10px"}>
-					<TextField fullWidth label="Выбранная вершина" value={getSelectedNode()?.label} onChange={event => selectedNodeChange([{key: "label", value: event.target.value}])}></TextField>
-					<TextField fullWidth label="ID" InputProps={{readOnly: true}} value={getSelectedNode()?.id} margin='dense'></TextField>
+				<Grid item xs margin="5px" paddingTop={"0px"} marginRight={"10px"}>
+					<Paper elevation={0} style={{height: '90vh', overflow: "auto"}}>
 					<List>
-		 				<ListItem alignItems="center" disablePadding>
+						<ListItem alignItems="center" disablePadding sx={{mt:"-8px"}}>
+							<TextField fullWidth label="Выбранная вершина" value={getSelectedNode()?.label} onChange={event => selectedNodeChange([{key: "label", value: event.target.value}])}></TextField>
+						</ListItem>
+						<ListItem alignItems="center" disablePadding>
+							<TextField fullWidth label="ID" InputProps={{readOnly: true}} value={getSelectedNode()?.id} margin='dense'></TextField>
+						</ListItem>
+						<ListItem alignItems="center" disablePadding>
 		 					<TextField fullWidth disabled={!getSelectedNode()?.macEditable} label="MAC" value={getSelectedNode()?.mac} onChange={event => selectedNodeChange([{key: "mac", value: event.target.value}])}/>
 		 					<Checkbox checked={getSelectedNode()?.macEditable} onChange={event => selectedNodeChange([{key: 'macEditable', value: event.target.checked}])}/>
 		 				</ListItem>
@@ -246,6 +252,7 @@ function App() {
 						</ListItem>
 
 		 			</List>
+					</Paper>
 				</Grid>
 			</Grid>
 		</Stack>

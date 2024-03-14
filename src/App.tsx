@@ -6,7 +6,8 @@ import { GraphInfo, NodeType, EdgeType, FloorInfo } from './types';
 import { AppBar, Box, Button,ButtonGroup,Checkbox,CssBaseline,Dialog,DialogTitle,FormControl,FormControlLabel,FormGroup,Grid,IconButton,InputLabel,List, ListItem,MenuItem,Paper,Select,Stack,TextField, Toolbar, Typography, createSvgIcon} from '@mui/material';
 import PlanLoadDialog from './PlanLoadDialog';
 import NumberInput from './NumberInput';
-import { maxHeaderSize } from 'http';
+import JSZip from 'jszip';
+import {saveAs} from 'file-saver'
 
 function reducer(state: GraphInfo, action: {type:string, args: any}):GraphInfo{
 	let currentFloor = state.floors.find(floor => floor.id == state.currentFloorId);
@@ -20,7 +21,7 @@ function reducer(state: GraphInfo, action: {type:string, args: any}):GraphInfo{
 		case 'node-create':
 			var [x, y] = convertMousePosToSVGPos(action.args.mousePosition.x, action.args.mousePosition.y);
 			var id = generateNodeId()
-			const new_node = {
+			const new_node:NodeType = {
 				id: id, 
 				x: x, 
 				y: y, 
@@ -29,7 +30,8 @@ function reducer(state: GraphInfo, action: {type:string, args: any}):GraphInfo{
 				macEditable: false, 
 				message: "", 
 				isEndPoint: false,
-				type: ""
+				type: "",
+				description: ""
 			}
 			currentFloor.nodes.push(new_node)
 			break;
@@ -39,8 +41,9 @@ function reducer(state: GraphInfo, action: {type:string, args: any}):GraphInfo{
 			const updateNode = <K extends keyof NodeType>(key: K, value: NodeType[K]) => {
 				node4[key] = value;
 			}
-
+			
 			for(var i = 0; i < changes.length; i++){
+				if(changes[i].key == "isEndPoint") console.log(changes);
 				updateNode(changes[i].key, changes[i].value);
 			}
 			break;
@@ -52,13 +55,13 @@ function reducer(state: GraphInfo, action: {type:string, args: any}):GraphInfo{
 		case 'edge-create':
 			if(currentFloor.selectedNodeId == -1 || currentFloor.selectedNodeId == action.args.nodeId) return state;
 			
-			const paths = currentFloor.edges.filter((edge) => currentFloor!.selectedNodeId in edge.nodes && action.args.nodeId in edge.nodes)
+			const paths = currentFloor.edges.filter((edge) => currentFloor!.selectedNodeId! in edge.nodes && action.args.nodeId in edge.nodes)
 			if(paths.length > 0){
 				return state;
 			}
 			const new_edge = {
 				id: generateEdgeId(), 
-				nodes: {[currentFloor.selectedNodeId]: 1, [action.args.nodeId]: 1}, 
+				nodes: {[currentFloor.selectedNodeId!]: 1, [action.args.nodeId]: 1}, 
 				message: ""
 			}
 			currentFloor.edges.push(new_edge);
@@ -67,7 +70,7 @@ function reducer(state: GraphInfo, action: {type:string, args: any}):GraphInfo{
 			currentFloor.edges = currentFloor.edges.filter((edge) => edge.id !== action.args.edgeId)
 			break;
 		case 'edge-update':
-			let edge = currentFloor.edges.find(e => action.args.nodeId in e.nodes && currentFloor!.selectedNodeId in e.nodes)
+			let edge = currentFloor.edges.find(e => action.args.nodeId in e.nodes && currentFloor!.selectedNodeId! in e.nodes)
 			if(edge == undefined) return state;
 			
 			edge.message = action.args.changes[0].value
@@ -104,6 +107,9 @@ function reducer(state: GraphInfo, action: {type:string, args: any}):GraphInfo{
 			currentFloor.id = action.args.value;
 			state.currentFloorId = action.args.value;
 			break;
+		case 'graph-export':
+			graphExport(state);
+			break;
 	}
 	return {
 		...state
@@ -127,7 +133,8 @@ function emptyFloor(id: number) :FloorInfo{
 		mac: "",
 		macEditable: false,
 		message: "",
-		type: ""
+		type: "",
+		description: ""
 	};
 	return {
 			id: id,
@@ -136,6 +143,51 @@ function emptyFloor(id: number) :FloorInfo{
 			edges: [],
 			planURL: ""
 	}
+}
+
+async function graphExport(graphInfo: GraphInfo){
+
+	const zip = JSZip();
+	const images = zip.folder("images");
+	for(var i = 0; i < graphInfo.floors.length; i++){
+		await fetch(graphInfo.floors[i].planURL)
+		.then(responce => responce.blob())
+		.then((blob) => {
+			return new File([blob], "filename.jpg");
+		}).then(file => {
+			if(images) images.file(`floor-${graphInfo.floors[i].id}.jpg`, file);
+		})
+	}
+
+	//graphInfo change
+	var new_graph:FloorInfo[] = []
+	for(var i = 0; i < graphInfo.floors.length; i++){
+		new_graph.push(Object.assign({},graphInfo.floors[i]) as FloorInfo)
+		new_graph[i].planURL = `images/floor-${graphInfo.floors[i].id}.jpg`;
+		delete new_graph[i].selectedNodeId;
+	}
+
+
+	zip.file('graph.json', JSON.stringify(new_graph, null, '\t'))
+
+	zip.generateAsync({type: "blob"}).then(content => saveAs(content, "graph"));
+
+	// console.log(graphInfo)
+	// for(var i = 0; i < graphInfo.floors.length; i++){
+	// 	await fetch(graphInfo.floors[i].planURL).then(e => {
+	// 		return e.blob();
+	// 	}).then(blob => {
+	// 		archive.set(`floor-${graphInfo.floors[i].id}.jpg`, blob);
+	// 	})
+	// }
+
+	// let filename = 'graph.zip';
+	// // let contentType = "application/json;charset=utf-8";
+	// var a = document.createElement('a');
+	// a.download = filename;
+	// a.href = URL.createObjectURL(archive.to_blob());
+	// a.target = "_blank";
+	// a.click();
 }
 
 function App() {
@@ -148,7 +200,7 @@ function App() {
 	}
 
 	const getSelectedNode = () => {
-		return getCurrentFloor().nodes.find(v => v.id === getCurrentFloor().selectedNodeId)
+		return getCurrentFloor().nodes.find(v => v.id === getCurrentFloor().selectedNodeId)!
 	}
 
 	const selectedNodeChange = (changes: {key: keyof NodeType, value: any}[]) => {
@@ -157,16 +209,16 @@ function App() {
 
 	const getConnectedNodesById = (id: number) => {
 		var edges = getCurrentFloor().edges.filter(edge => id in edge.nodes);
-		var ids = {[getCurrentFloor().selectedNodeId]: 1};
+		var ids = {[getCurrentFloor().selectedNodeId!]: 1};
 		edges.forEach(elem => {ids = Object.assign(ids, elem.nodes)})
 		
-		delete ids[getCurrentFloor().selectedNodeId];
+		delete ids[getCurrentFloor().selectedNodeId!];
 
 		return getCurrentFloor().nodes.filter(node => node.id in ids);
 	}
 
 	const getEdgeById = (id: number) => {
-		let edge = getCurrentFloor().edges.find(e => id in e.nodes && getCurrentFloor().selectedNodeId in e.nodes)
+		let edge = getCurrentFloor().edges.find(e => id in e.nodes && getCurrentFloor().selectedNodeId! in e.nodes)
 		if(edge == undefined) return ({id: -1, nodes: [], message: ""} as EdgeType)
 		return edge;
 	}
@@ -220,6 +272,19 @@ function App() {
 							<TextField fullWidth label="Координата Y" value={getSelectedNode()?.y} onChange={event => selectedNodeChange([{key: "y", value: event.target.value}])} margin='dense'></TextField>
 						</ListItem>
 						<ListItem alignItems='center' disablePadding>
+							<TextField fullWidth label="Описание" value={getSelectedNode()!.description} onChange={event => selectedNodeChange([{key: "description", value: event.target.value}])} margin='dense'></TextField>
+						</ListItem>
+						<ListItem alignItems='center' disablePadding>
+							<FormControl margin='dense' fullWidth>
+                                <InputLabel id='type-select-label'>Тип точки</InputLabel>
+                                <Select labelId='type-select-label' label="Тип точки" value={getSelectedNode()!.type} onChange={e => selectedNodeChange([{key: 'type', value: e.target.value}])}>
+                                    <MenuItem value={""}>Без типа</MenuItem>
+                                    <MenuItem value={"аудитория"}>Аудитория</MenuItem>
+                                    <MenuItem value={"туалет"}>Туалет</MenuItem>
+                                </Select>
+                            </FormControl>
+						</ListItem>
+						<ListItem alignItems='center' disablePadding>
 							<TextField fullWidth label="Аудио-сообщение" value={getSelectedNode()!.message} onChange={event => selectedNodeChange([{key: "message", value: event.target.value}])} margin='dense'></TextField>
 						</ListItem>
 						<ListItem alignItems='center' disablePadding>
@@ -228,7 +293,7 @@ function App() {
                                 <Select labelId='link-select-label' label="Смежная точка" value={selectorValue} onChange={e => setSelectorValue(e.target.value as number)}>
                                     <MenuItem value={-1}>None</MenuItem>
 									{
-										getConnectedNodesById(getCurrentFloor().selectedNodeId).map(node => {
+										getConnectedNodesById(getCurrentFloor().selectedNodeId!).map(node => {
 											return <MenuItem value={node.id}>{node.label}</MenuItem>
 										})
 									}
@@ -240,12 +305,12 @@ function App() {
 						</ListItem> 
 						<ListItem alignItems='center' disablePadding>
 							<FormGroup row>
-								<FormControlLabel control={<Checkbox value={getSelectedNode()?.isEndPoint} onChange={e => selectedNodeChange([{key: "isEndPoint", value: e.target.checked}])}/>} label={"Конечная точка"}/>
+								<FormControlLabel control={<Checkbox value={getSelectedNode().isEndPoint} checked={getSelectedNode()!.isEndPoint} onChange={e => {selectedNodeChange([{key: "isEndPoint", value: e.target.checked}])}}/>} label={"Конечная точка"}/>
 								{/* <FormControlLabel control={<Checkbox defaultChecked/>} label={"Route spelling"}/> */}
 							</FormGroup>
 						</ListItem>
 						<ListItem alignItems='center' disablePadding>
-							<Button fullWidth variant='contained'>экспортировать</Button>
+							<Button fullWidth variant='contained' onClick={() => dispatch({type: "graph-export", args: {}})}>экспортировать</Button>
 						</ListItem>
 						<ListItem alignItems='center' disableGutters>
 							<Button fullWidth variant='contained'>импортировать</Button>
@@ -268,3 +333,4 @@ const DownIcon = createSvgIcon(<svg width="800px" height="800px" viewBox="0 0 24
 </svg>, "DOWN")
 
 export default App;
+

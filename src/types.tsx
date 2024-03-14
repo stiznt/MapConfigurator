@@ -8,8 +8,9 @@ type NodeType = {
 	mac?: string
 	macEditable? :boolean
 	message?: string
-	isEndPoint?: boolean,
+	isEndPoint: boolean,
 	type: string
+	description: string
 }
 
 type EdgeType = {
@@ -25,10 +26,9 @@ type GraphInfo = {
 
 type FloorInfo = {
 	id: number
-	selectedNodeId: number,
+	selectedNodeId?: number,
 	nodes: NodeType[],
 	edges: EdgeType[],
-	selectedNodeInfo? : NodeType
 	planURL: string
 }
 export type {NodeType, EdgeType, GraphInfo, FloorInfo}

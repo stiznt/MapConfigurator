@@ -1,3 +1,5 @@
+
+
 type NodeType = {
 	id: number,
 	label: string,
@@ -6,7 +8,8 @@ type NodeType = {
 	mac?: string
 	macEditable? :boolean
 	message?: string
-	isEndPoint?: boolean
+	isEndPoint?: boolean,
+	type: string
 }
 
 type EdgeType = {
@@ -17,10 +20,11 @@ type EdgeType = {
 
 type GraphInfo = {
 	floors: FloorInfo[]
-	currentFloor: number
+	currentFloorId: number
 }
 
 type FloorInfo = {
+	id: number
 	selectedNodeId: number,
 	nodes: NodeType[],
 	edges: EdgeType[],

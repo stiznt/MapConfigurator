@@ -5,16 +5,17 @@ import { convertMousePosToSVGPos, generateEdgeId, generateNodeId } from './utils
 import { GraphInfo, NodeType, EdgeType, FloorInfo } from './types';
 import { AppBar, Box, Button,ButtonGroup,Checkbox,CssBaseline,Dialog,DialogTitle,FormControl,FormControlLabel,FormGroup,Grid,IconButton,InputLabel,List, ListItem,MenuItem,Select,Stack,TextField, Toolbar, Typography, createSvgIcon} from '@mui/material';
 import PlanLoadDialog from './PlanLoadDialog';
+import NumberInput from './NumberInput';
 
 function reducer(state: GraphInfo, action: {type:string, args: any}):GraphInfo{
+	let currentFloor = state.floors.find(floor => floor.id == state.currentFloorId);
+	if(!currentFloor) return state;
 	switch(action.type){
 		case 'node-select':
-			const new_id = state.floors[state.currentFloor].selectedNodeId == action.args.nodeId ? -1: action.args.nodeId;
-			state.floors[state.currentFloor].selectedNodeId = new_id;
+			const new_id = currentFloor.selectedNodeId == action.args.nodeId ? -1: action.args.nodeId;
+			currentFloor.selectedNodeId = new_id;
 			console.log(state, action.args.nodeId, new_id)
-			return {
-				...state
-			};
+			break;
 		case 'node-create':
 			var [x, y] = convertMousePosToSVGPos(action.args.mousePosition.x, action.args.mousePosition.y);
 			var id = generateNodeId()
@@ -26,15 +27,14 @@ function reducer(state: GraphInfo, action: {type:string, args: any}):GraphInfo{
 				mac: "", 
 				macEditable: false, 
 				message: "", 
-				isEndPoint: false
+				isEndPoint: false,
+				type: ""
 			}
-			state.floors[state.currentFloor].nodes.push(new_node)
-			return {
-				...state,
-			};
+			currentFloor.nodes.push(new_node)
+			break;
 		case 'node-change':
 			var changes : {key:keyof NodeType, value: any}[] = action.args.changes;
-			let node4 = state.floors[state.currentFloor].nodes.find(v => v.id == action.args.nodeId)!;
+			let node4 = currentFloor.nodes.find(v => v.id == action.args.nodeId)!;
 			const updateNode = <K extends keyof NodeType>(key: K, value: NodeType[K]) => {
 				node4[key] = value;
 			}
@@ -42,81 +42,83 @@ function reducer(state: GraphInfo, action: {type:string, args: any}):GraphInfo{
 			for(var i = 0; i < changes.length; i++){
 				updateNode(changes[i].key, changes[i].value);
 			}
-			return {
-				...state
-			};
+			break;
 		case 'node-remove':
 			if(action.args.nodeId == -1) return state;
-			state.floors[state.currentFloor].nodes = state.floors[state.currentFloor].nodes.filter(node => node.id != action.args.nodeId);
-			state.floors[state.currentFloor].selectedNodeId = -1;
-			return {
-				...state
-			};
+			currentFloor.nodes = currentFloor.nodes.filter(node => node.id != action.args.nodeId);
+			currentFloor.selectedNodeId = -1;
+			break;
 		case 'edge-create':
-			if(state.floors[state.currentFloor].selectedNodeId == -1 || state.floors[state.currentFloor].selectedNodeId == action.args.nodeId) return state;
+			if(currentFloor.selectedNodeId == -1 || currentFloor.selectedNodeId == action.args.nodeId) return state;
 			
-			const paths = state.floors[state.currentFloor].edges.filter((edge) => state.floors[state.currentFloor].selectedNodeId in edge.nodes && action.args.nodeId in edge.nodes)
+			const paths = currentFloor.edges.filter((edge) => currentFloor!.selectedNodeId in edge.nodes && action.args.nodeId in edge.nodes)
 			if(paths.length > 0){
 				return state;
 			}
 			const new_edge = {
 				id: generateEdgeId(), 
-				nodes: {[state.floors[state.currentFloor].selectedNodeId]: 1, [action.args.nodeId]: 1}, 
+				nodes: {[currentFloor.selectedNodeId]: 1, [action.args.nodeId]: 1}, 
 				message: ""
 			}
-			state.floors[state.currentFloor].edges.push(new_edge);
-			return {
-				...state
-			};
+			currentFloor.edges.push(new_edge);
+			break;
 		case 'edge-remove':
-			state.floors[state.currentFloor].edges = state.floors[state.currentFloor].edges.filter((edge) => edge.id !== action.args.edgeId)
-			return {
-				...state
-			}
+			currentFloor.edges = currentFloor.edges.filter((edge) => edge.id !== action.args.edgeId)
+			break;
 		case 'edge-update':
-			let edge = state.floors[state.currentFloor].edges.find(e => action.args.nodeId in e.nodes && state.floors[state.currentFloor].selectedNodeId in e.nodes)
+			let edge = currentFloor.edges.find(e => action.args.nodeId in e.nodes && currentFloor!.selectedNodeId in e.nodes)
 			if(edge == undefined) return state;
 			
 			edge.message = action.args.changes[0].value
-			return {
-				...state
-			};
+			break;
 		case 'set-plan':
-			state.floors[state.currentFloor].planURL = action.args.url
-			return{
-				...state
-			}
-		case 'set-current-floor':
-			return{
-				...state,
-				currentFloor: action.args.value
-			}
+			currentFloor.planURL = action.args.url
+			break;
 		case 'floor-create':
-			state.floors.push(emptyFloor());
-			state.currentFloor += 1;
-			return {
-				...state
-			}
+			const floor_id = state.floors[state.floors.length-1].id;
+			state.floors.push(emptyFloor(floor_id + 1));
+			state.currentFloorId = floor_id+1;
+			break;
 		case 'floor-remove':
-			if(state.floors.length == 1) return state;
-			state.floors.splice(state.currentFloor, 1);
-			state.currentFloor -= state.currentFloor - 1 < 0? 0:state.currentFloor-1;
-			return {
-				...state
+			if(state.floors.length == 1) break;
+			var floorIndex = state.floors.findIndex(floor => floor.id === state.currentFloorId);
+			for(var i = state.floors.length-1; i > floorIndex; i--){
+				state.floors[i].id = state.floors[i-1].id;
 			}
-	}
+			state.currentFloorId = floorIndex === 0? state.floors[0].id: state.floors[floorIndex-1].id;
+			state.floors.splice(floorIndex, 1);
+			break;
+		case 'current-floor-id-decrease':
+			var temp = state.floors.findIndex(floor => floor.id === state.currentFloorId);
+			if(temp == 0) break;
+			state.currentFloorId = state.floors[temp-1].id;
+			console.log(state.floors)
+			break;
+		case 'current-floor-id-increase':
+			var temp = state.floors.findIndex(floor => floor.id === state.currentFloorId);
+			if(temp == state.floors.length-1) break;
+			state.currentFloorId = state.floors[temp+1].id;
+			console.log(state.floors)
 
-	return state;
+			break;
+		case 'floor-id-change':
+			currentFloor.id = action.args.value;
+			state.currentFloorId = action.args.value;
+			break;
+	}
+	return {
+		...state
+	}
 }
 
 function initGraphInfo(): GraphInfo{
 	return {
-		floors: [emptyFloor()],
-		currentFloor: 0
+		floors: [emptyFloor(1)],
+		currentFloorId: 1
 	}
 }
 
-function emptyFloor() :FloorInfo{
+function emptyFloor(id: number) :FloorInfo{
 	const emptyNode: NodeType = {
 		id: -1,
 		label: "",
@@ -125,9 +127,11 @@ function emptyFloor() :FloorInfo{
 		isEndPoint: false,
 		mac: "",
 		macEditable: false,
-		message: ""
+		message: "",
+		type: ""
 	};
 	return {
+			id: id,
 			selectedNodeId: -1,
 			nodes: [emptyNode],
 			edges: [],
@@ -140,26 +144,30 @@ function App() {
 	const [selectorValue, setSelectorValue] = useState(-1);
 	const [planLoadDialog, setPlanLoadDialogOpen] = useState(false);
 
+	const getCurrentFloor = () => {
+		return graphInfo.floors.find(floor => floor.id === graphInfo.currentFloorId)!;
+	}
+
 	const getSelectedNode = () => {
-		return graphInfo.floors[graphInfo.currentFloor].nodes.find(v => v.id === graphInfo.floors[graphInfo.currentFloor].selectedNodeId)
+		return getCurrentFloor().nodes.find(v => v.id === getCurrentFloor().selectedNodeId)
 	}
 
 	const selectedNodeChange = (changes: {key: keyof NodeType, value: any}[]) => {
-		dispatch({type: "node-change", args: {nodeId: graphInfo.floors[graphInfo.currentFloor].selectedNodeId, changes: changes}});
+		dispatch({type: "node-change", args: {nodeId: getCurrentFloor().selectedNodeId, changes: changes}});
 	}
 
 	const getConnectedNodesById = (id: number) => {
-		var edges = graphInfo.floors[graphInfo.currentFloor].edges.filter(edge => id in edge.nodes);
-		var ids = {[graphInfo.floors[graphInfo.currentFloor].selectedNodeId]: 1};
+		var edges = getCurrentFloor().edges.filter(edge => id in edge.nodes);
+		var ids = {[getCurrentFloor().selectedNodeId]: 1};
 		edges.forEach(elem => {ids = Object.assign(ids, elem.nodes)})
 		
-		delete ids[graphInfo.floors[graphInfo.currentFloor].selectedNodeId];
+		delete ids[getCurrentFloor().selectedNodeId];
 
-		return graphInfo.floors[graphInfo.currentFloor].nodes.filter(node => node.id in ids);
+		return getCurrentFloor().nodes.filter(node => node.id in ids);
 	}
 
 	const getEdgeById = (id: number) => {
-		let edge = graphInfo.floors[graphInfo.currentFloor].edges.find(e => id in e.nodes && graphInfo.floors[graphInfo.currentFloor].selectedNodeId in e.nodes)
+		let edge = getCurrentFloor().edges.find(e => id in e.nodes && getCurrentFloor().selectedNodeId in e.nodes)
 		if(edge == undefined) return ({id: -1, nodes: [], message: ""} as EdgeType)
 		return edge;
 	}
@@ -179,18 +187,19 @@ function App() {
 					<Stack direction={'row'} spacing={3}>
 						<Button color="inherit" onClick={() => dispatch({type: 'floor-create', args: {}})}>Новый этаж</Button>
 						<Button color="inherit" onClick={() => dispatch({type: 'floor-remove', args: {}})}>Удалить этаж</Button>
-						<ButtonGroup variant='text'>
-							<IconButton color="inherit" onClick={() => dispatch({type: 'set-current-floor', args: {value: graphInfo.currentFloor + 1 >= graphInfo.floors.length? graphInfo.floors.length-1: graphInfo.currentFloor+1}})}><UpIcon/></IconButton>
-							<Typography  variant="h5" textAlign={"center"} width={"100%"}>{graphInfo.currentFloor + 1}</Typography>
-							<IconButton color="inherit" onClick={() => dispatch({type: 'set-current-floor', args: {value: graphInfo.currentFloor - 1 < 0? 0: graphInfo.currentFloor-1}})}><DownIcon/></IconButton>
-						</ButtonGroup>
 						<Button color="inherit" onClick={e => setPlanLoadDialogOpen(true)}>Загрузить план этажа</Button>
+						<Typography variant='h6' paddingTop={"6px"} paddingBottom={"6px"} color="inherit">этаж: </Typography>
+						<ButtonGroup variant='text'>
+							<IconButton color="inherit" onClick={() => dispatch({type: 'current-floor-id-increase', args: {}})}><UpIcon/></IconButton>
+							<NumberInput value={graphInfo.currentFloorId} onChange={(value:number) => dispatch({type: 'floor-id-change', args: {value: value}})}/>
+							<IconButton color="inherit" onClick={() => dispatch({type: 'current-floor-id-decrease', args: {}})}><DownIcon/></IconButton>
+						</ButtonGroup>
 					</Stack>
 				</Toolbar>
 			</AppBar>
 			<Grid container marginTop={"5px"}>
 				<Grid item xs={9}>
-					<Graph graphInfo={graphInfo.floors[graphInfo.currentFloor]} dispatcher={dispatch}/>
+					<Graph graphInfo={getCurrentFloor()} dispatcher={dispatch}/>
 				</Grid>
 				<Grid item xs margin="5px" marginRight={"10px"}>
 					<TextField fullWidth label="Выбранная вершина" value={getSelectedNode()?.label} onChange={event => selectedNodeChange([{key: "label", value: event.target.value}])}></TextField>
@@ -215,7 +224,7 @@ function App() {
                                 <Select labelId='link-select-label' label="Смежная точка" value={selectorValue} onChange={e => setSelectorValue(e.target.value as number)}>
                                     <MenuItem value={-1}>None</MenuItem>
 									{
-										getConnectedNodesById(graphInfo.floors[graphInfo.currentFloor].selectedNodeId).map(node => {
+										getConnectedNodesById(getCurrentFloor().selectedNodeId).map(node => {
 											return <MenuItem value={node.id}>{node.label}</MenuItem>
 										})
 									}

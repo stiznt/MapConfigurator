@@ -1,16 +1,19 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 var edgeId = -1;
-var nodeId = -1;
 
 function generateEdgeId(){
-    edgeId++;
-    return edgeId;
+    var value = parseInt(localStorage.getItem("edgeMaxId")!);
+    value += 1;
+    localStorage.setItem("edgeMaxId", value.toString())
+    return value;
 }
 
 function generateNodeId(){
-    nodeId++;
-    return nodeId;
+    var value = parseInt(localStorage.getItem("nodeMaxId")!);
+    value += 1;
+    localStorage.setItem("nodeMaxId", value.toString())
+    return value;
 }
 
 function convertMousePosToSVGPos(mouseX: number, mouseY: number){

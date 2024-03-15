@@ -116,7 +116,21 @@ function reducer(state: GraphInfo, action: {type:string, args: any}):GraphInfo{
 			graphExport(state);
 			break;
 		case 'state-change':
-			console.log(action.args.state);
+			var maxNodeId = -1;
+			var maxEdgeId = -1;
+			const temp1 = action.args.state as GraphInfo
+			console.log("state change", temp1)
+			for(var i = 0; i < temp1.floors.length; i++){
+				console.log(action.args.state.floors[i])
+				for(var j = 0; j < temp1.floors[i].nodes.length; j++){
+					maxNodeId = Math.max(maxNodeId, temp1.floors[i].nodes[j].id);
+				}
+				for(var j = 0; j < temp1.floors[i].edges.length; j++){
+					maxEdgeId = Math.max(maxNodeId, temp1.floors[i].edges[j].id);
+				}
+			}
+			localStorage.setItem("nodeMaxId", maxNodeId.toString());
+			localStorage.setItem("edgeMaxId", maxEdgeId.toString());
 			return {...action.args.state}
 	}
 	return {
@@ -180,22 +194,6 @@ async function graphExport(graphInfo: GraphInfo){
 
 	zip.generateAsync({type: "blob"}).then(content => saveAs(content, "graph"));
 
-	// console.log(graphInfo)
-	// for(var i = 0; i < graphInfo.floors.length; i++){
-	// 	await fetch(graphInfo.floors[i].planURL).then(e => {
-	// 		return e.blob();
-	// 	}).then(blob => {
-	// 		archive.set(`floor-${graphInfo.floors[i].id}.jpg`, blob);
-	// 	})
-	// }
-
-	// let filename = 'graph.zip';
-	// // let contentType = "application/json;charset=utf-8";
-	// var a = document.createElement('a');
-	// a.download = filename;
-	// a.href = URL.createObjectURL(archive.to_blob());
-	// a.target = "_blank";
-	// a.click();
 }
 
 function graphImport(file:any, callback: (value: any) => void){

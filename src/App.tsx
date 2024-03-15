@@ -1,4 +1,4 @@
-import { useCallback, useReducer, useState } from 'react';
+import { useCallback, useEffect, useReducer, useState } from 'react';
 import './App.css';
 import Graph from './Graph';
 import { convertMousePosToSVGPos, generateEdgeId, generateNodeId } from './utils';
@@ -235,6 +235,18 @@ function App() {
 	const selectedNodeChange = (changes: {key: keyof NodeType, value: any}[]) => {
 		dispatch({type: "node-change", args: {nodeId: getCurrentFloor().selectedNodeId, changes: changes}});
 	}
+
+	useEffect( () => {
+		function handler(event: any){
+			event.returnValue = true;
+		}
+		window.addEventListener("beforeunload", handler);
+
+		return () => {
+			window.removeEventListener('beforeunload', handler)
+		}
+
+	}, [])
 
 	const getConnectedNodesById = (id: number) => {
 		var edges = getCurrentFloor().edges.filter(edge => id in edge.nodes);
